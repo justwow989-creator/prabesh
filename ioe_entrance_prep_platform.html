@@ -1,0 +1,481 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);background:transparent}
+.btn{cursor:pointer;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);padding:10px 20px;border-radius:var(--border-radius-md);font-size:14px;font-family:var(--font-sans);transition:background 0.15s,transform 0.1s}
+.btn:hover{background:var(--color-background-secondary)}
+.btn:active{transform:scale(0.98)}
+.btn-primary{background:var(--color-text-primary);color:var(--color-background-primary);border-color:var(--color-text-primary)}
+.btn-primary:hover{opacity:0.88;background:var(--color-text-primary)}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1.25rem}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px}
+.badge-math{background:#E6F1FB;color:#0C447C}
+.badge-physics{background:#EEEDFE;color:#3C3489}
+.badge-chemistry{background:#EAF3DE;color:#27500A}
+.badge-trick{background:#FAEEDA;color:#633806}
+.badge-hard{background:#FCEBEB;color:#791F1F}
+.badge-correct{background:#EAF3DE;color:#27500A}
+.badge-wrong{background:#FCEBEB;color:#791F1F}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes tick{0%{transform:scaleX(1)}50%{transform:scaleX(0.97)}100%{transform:scaleX(1)}}
+.animate{animation:fadeUp 0.3s ease forwards}
+.opt-btn{width:100%;text-align:left;padding:12px 14px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);color:var(--color-text-primary);font-size:14px;cursor:pointer;transition:all 0.15s;font-family:var(--font-sans);display:flex;align-items:center;gap:10px}
+.opt-btn:hover:not(:disabled){background:var(--color-background-secondary);border-color:var(--color-border-secondary)}
+.opt-btn.correct{background:#EAF3DE;border-color:#639922;color:#27500A}
+.opt-btn.wrong{background:#FCEBEB;border-color:#E24B4A;color:#791F1F}
+.opt-btn.reveal{background:#E6F1FB;border-color:#185FA5;color:#042C53}
+.opt-label{width:22px;height:22px;border-radius:50%;border:0.5px solid var(--color-border-secondary);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0}
+.prog-bar{height:4px;background:var(--color-background-secondary);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;background:var(--color-text-primary);border-radius:2px;transition:width 0.4s ease}
+.timer-ring{position:relative;width:52px;height:52px;flex-shrink:0}
+.timer-ring svg{transform:rotate(-90deg)}
+.timer-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;font-family:var(--font-mono)}
+.stat-card{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:1rem;text-align:center}
+.stat-num{font-size:26px;font-weight:500;margin-bottom:2px}
+.stat-label{font-size:12px;color:var(--color-text-secondary)}
+.resource-link{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:4px 10px;border-radius:20px;border:0.5px solid var(--color-border-tertiary);color:var(--color-text-secondary);text-decoration:none;transition:background 0.15s}
+.resource-link:hover{background:var(--color-background-secondary)}
+.subj-bar-wrap{margin-bottom:12px}
+.subj-bar-bg{height:8px;border-radius:4px;background:var(--color-background-secondary);overflow:hidden;margin-top:4px}
+.screen{padding:1rem 0;min-height:420px}
+</style>
+
+<div id="app"></div>
+
+<script>
+const BANK = {
+  math:[
+    {id:'m1',topic:'calculus',d:'normal',q:'What is lim(x→0) [sin x / x]?',opts:['0','∞','1','undefined'],ans:2},
+    {id:'m2',topic:'trigonometry',d:'normal',q:'What is the value of sin²θ + cos²θ?',opts:['0','2','1','−1'],ans:2},
+    {id:'m3',topic:'coordinate_geometry',d:'normal',q:'Distance between (0,0) and (3,4) is:',opts:['5','7','4','3'],ans:0},
+    {id:'m4',topic:'matrices',d:'normal',q:'If A = [[1,2],[3,4]], then det(A) = ?',opts:['2','−2','10','−10'],ans:1},
+    {id:'m5',topic:'complex_numbers',d:'normal',q:'If z = 1+i, then |z| = ?',opts:['1','2','√2','√3'],ans:2},
+    {id:'m6',topic:'sequences_series',d:'normal',q:'Sum of infinite GP: 3 + 3/2 + 3/4 + … is:',opts:['3','6','9','∞'],ans:1},
+    {id:'m7',topic:'probability',d:'normal',q:'Toss a fair coin twice. P(at least one head) = ?',opts:['1/4','1/2','3/4','1'],ans:2},
+    {id:'m8',topic:'vectors',d:'normal',q:'Dot product of two perpendicular vectors is:',opts:['|a||b|','1','−1','0'],ans:3},
+    {id:'m9',topic:'calculus',d:'normal',q:'The derivative of sin(x) is:',opts:['−sin(x)','cos(x)','−cos(x)','tan(x)'],ans:1},
+    {id:'m10',topic:'logarithms',d:'normal',q:'log₂(32) = ?',opts:['4','5','6','3'],ans:1},
+    {id:'m11',topic:'statistics',d:'normal',q:'Median of {1, 3, 5, 7, 9} is:',opts:['3','7','5','9'],ans:2},
+    {id:'m12',topic:'trigonometry',d:'normal',q:'cos(2x) expressed in cosines is:',opts:['2cos(x)−1','2cos²(x)−1','1−2cos²(x)','cos²(x)'],ans:1},
+    {id:'m13',topic:'coordinate_geometry',d:'normal',q:'Slope of the line y = 3x − 5 is:',opts:['−5','5','3','−3'],ans:2},
+    {id:'m14',topic:'permutations',d:'normal',q:'5! = ?',opts:['60','100','120','240'],ans:2},
+    {id:'m15',topic:'calculus',d:'normal',q:'∫sin(x) dx = ?',opts:['cos(x)+C','−cos(x)+C','sin(x)+C','−sin(x)+C'],ans:1},
+    {id:'m16',topic:'conic_sections',d:'normal',q:'Eccentricity of a circle is:',opts:['1','0.5','0','2'],ans:2},
+    {id:'m17',topic:'matrices',d:'normal',q:'A square matrix with 1s on diagonal and 0s elsewhere is called:',opts:['Zero matrix','Scalar matrix','Identity matrix','Diagonal matrix'],ans:2},
+    {id:'m18',topic:'trigonometry',d:'hard',q:'sin(75°) = ?',opts:['(√6+√2)/4','(√6−√2)/4','(√3+1)/2','(√3−1)/2'],ans:0},
+    {id:'m19',topic:'calculus',d:'hard',q:'∫x·eˣ dx = ?',opts:['eˣ(x+1)+C','eˣ(x−1)+C','xeˣ+C','x²eˣ/2+C'],ans:1},
+    {id:'m20',topic:'probability',d:'trick',q:'A bag has 3 red and 3 blue balls. Draw 2 without replacement. P(both same color) = ?',opts:['1/3','2/5','3/5','1/2'],ans:1},
+  ],
+  physics:[
+    {id:'p1',topic:'mechanics',d:'normal',q:'Ball thrown up at 20 m/s. Time to reach max height (g=10 m/s²):',opts:['1 s','2 s','4 s','5 s'],ans:1},
+    {id:'p2',topic:'optics',d:'normal',q:'Image formed by a convex mirror is always:',opts:['Real and inverted','Virtual and erect','Real and erect','Virtual and inverted'],ans:1},
+    {id:'p3',topic:'electricity',d:'normal',q:'Voltage constant, resistance doubles — current:',opts:['Doubles','Stays same','Halves','Becomes zero'],ans:2},
+    {id:'p4',topic:'waves',d:'normal',q:'Sound travels fastest in:',opts:['Air','Water','Steel','Vacuum'],ans:2},
+    {id:'p5',topic:'thermodynamics',d:'normal',q:'1st law of thermodynamics is based on:',opts:['Conservation of momentum','Conservation of energy','Conservation of mass','Conservation of charge'],ans:1},
+    {id:'p6',topic:'modern_physics',d:'normal',q:'Increasing light frequency in photoelectric effect:',opts:['Increases electron count','Decreases electron energy','Increases electron KE','Has no effect'],ans:2},
+    {id:'p7',topic:'gravitation',d:'normal',q:'Escape velocity from Earth is approximately:',opts:['7.9 km/s','9.8 km/s','11.2 km/s','5 km/s'],ans:2},
+    {id:'p8',topic:'work_energy',d:'normal',q:'Work done when force is perpendicular to displacement:',opts:['Maximum','F×d','Zero','F/d'],ans:2},
+    {id:'p9',topic:'oscillations',d:'normal',q:'Period of a simple pendulum depends on:',opts:['Mass only','Length and g only','Mass and length','All of the above'],ans:1},
+    {id:'p10',topic:'electricity',d:'normal',q:'SI unit of electric charge is:',opts:['Ampere','Volt','Coulomb','Ohm'],ans:2},
+    {id:'p11',topic:'optics',d:'normal',q:'Wavelength range of visible light is approximately:',opts:['100−400 nm','400−700 nm','700−1000 nm','200−300 nm'],ans:1},
+    {id:'p12',topic:'mechanics',d:'normal',q:'Body in uniform circular motion has:',opts:['Constant velocity','Constant speed but changing direction','Zero acceleration','Decreasing speed'],ans:1},
+    {id:'p13',topic:'magnetism',d:'normal',q:'Unit of magnetic flux is:',opts:['Tesla','Weber','Henry','Gauss'],ans:1},
+    {id:'p14',topic:'waves',d:'normal',q:'Electromagnetic waves are:',opts:['Longitudinal','Transverse','Both','Neither'],ans:1},
+    {id:'p15',topic:'thermodynamics',d:'normal',q:'Absolute zero temperature is:',opts:['0°C','−100°C','−273°C','100 K'],ans:2},
+    {id:'p16',topic:'mechanics',d:'hard',q:'Orbital velocity of satellite at height h is proportional to:',opts:['(R+h)','1/√(R+h)','√(R+h)','1/(R+h)'],ans:1},
+    {id:'p17',topic:'electricity',d:'hard',q:'A 2μF capacitor charged to 200V stores energy of:',opts:['0.04 J','0.2 J','4 J','400 J'],ans:0},
+    {id:'p18',topic:'mechanics',d:'trick',q:'A feather and a hammer dropped simultaneously in a perfect vacuum — which lands first?',opts:['Hammer','Feather','Both at same time','Depends on height'],ans:2},
+    {id:'p19',topic:'optics',d:'normal',q:'Total internal reflection occurs when light goes from:',opts:['Rarer to denser medium','Denser to rarer medium at critical angle','Any medium at 45°','Denser to rarer at any angle'],ans:1},
+    {id:'p20',topic:'modern_physics',d:'normal',q:'De Broglie: λ = h/mv. If velocity doubles, wavelength:',opts:['Doubles','Halves','Stays same','Quadruples'],ans:1},
+  ],
+  chemistry:[
+    {id:'c1',topic:'atomic_structure',d:'normal',q:'Atomic number of Carbon is:',opts:['4','6','8','12'],ans:1},
+    {id:'c2',topic:'periodic_table',d:'normal',q:'Which is NOT a noble gas?',opts:['Helium','Neon','Chlorine','Argon'],ans:2},
+    {id:'c3',topic:'acids_bases',d:'normal',q:'pH of neutral solution at 25°C is:',opts:['0','7','14','1'],ans:1},
+    {id:'c4',topic:'mole_concept',d:'normal',q:"Avogadro's number is approximately:",opts:['6.022×10²²','6.022×10²³','6.022×10²⁴','3.011×10²³'],ans:1},
+    {id:'c5',topic:'chemical_bonding',d:'normal',q:'Bond type in NaCl is:',opts:['Covalent','Metallic','Ionic','Hydrogen'],ans:2},
+    {id:'c6',topic:'organic_chemistry',d:'normal',q:'IUPAC name of CH₃CH₂OH is:',opts:['Methanol','Propanol','Ethanol','Butanol'],ans:2},
+    {id:'c7',topic:'electrochemistry',d:'normal',q:'In a galvanic cell, oxidation occurs at:',opts:['Cathode','Both electrodes','Anode','Neither'],ans:2},
+    {id:'c8',topic:'periodic_table',d:'normal',q:'Electronegativity generally increases moving:',opts:['Down a group','Right to left across period','Left to right across period','No clear trend'],ans:2},
+    {id:'c9',topic:'chemical_bonding',d:'normal',q:'Hybridization of carbon in CH₄ is:',opts:['sp','sp²','sp³','d²sp³'],ans:2},
+    {id:'c10',topic:'equilibrium',d:'normal',q:"Le Chatelier's principle: disturbed system at equilibrium:",opts:['Enhances disturbance','Opposes disturbance','Breaks equilibrium permanently','Shows no change'],ans:1},
+    {id:'c11',topic:'inorganic_chemistry',d:'normal',q:'Gas produced when Zn reacts with dilute HCl:',opts:['Oxygen','Chlorine','Hydrogen','Nitrogen'],ans:2},
+    {id:'c12',topic:'thermochemistry',d:'normal',q:'ΔH < 0 indicates a reaction is:',opts:['Endothermic','Spontaneous only','Exothermic','At equilibrium'],ans:2},
+    {id:'c13',topic:'organic_chemistry',d:'normal',q:'Functional group of carboxylic acids:',opts:['−OH','−CHO','−COOH','−NH₂'],ans:2},
+    {id:'c14',topic:'oxidation_reduction',d:'normal',q:'Oxidation state of oxygen in H₂O₂ is:',opts:['−2','0','+1','−1'],ans:3},
+    {id:'c15',topic:'reaction_kinetics',d:'normal',q:'Reaction rate generally increases with:',opts:['Decreasing temperature','Increasing temperature','Decreasing concentration','Increasing activation energy'],ans:1},
+    {id:'c16',topic:'solutions',d:'normal',q:'Molarity is moles of solute per:',opts:['Kg of solvent','Liter of solvent','Liter of solution','Gram of solution'],ans:2},
+    {id:'c17',topic:'periodic_table',d:'normal',q:'First ionization energy generally increases:',opts:['Down a group','Across period left to right','With atomic radius','With decreasing atomic number'],ans:1},
+    {id:'c18',topic:'atomic_structure',d:'hard',q:'Maximum electrons in M shell (n=3) is:',opts:['8','10','18','6'],ans:2},
+    {id:'c19',topic:'organic_chemistry',d:'hard',q:'Product of CH₃CH₂Br + KOH (alcoholic):',opts:['CH₃CH₂OH','CH₂=CH₂','CH₃CHO','CH₃COOH'],ans:1},
+    {id:'c20',topic:'acids_bases',d:'trick',q:'Water (H₂O) is best described as:',opts:['Only an acid','Only a base','Neither acid nor base','Both acid and base (amphoteric)'],ans:3},
+  ]
+};
+
+const RESOURCES = {
+  calculus:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+calculus+Nepal',pdf:'https://ioenotes.edu.np/'},
+  trigonometry:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+trigonometry+Nepal',pdf:'https://ioenotes.edu.np/'},
+  coordinate_geometry:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+coordinate+geometry+Nepal',pdf:'https://ioenotes.edu.np/'},
+  matrices:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+matrices+Nepal',pdf:'https://ioenotes.edu.np/'},
+  complex_numbers:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+complex+numbers+Nepal',pdf:'https://ioenotes.edu.np/'},
+  sequences_series:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+sequences+series+Nepal',pdf:'https://ioenotes.edu.np/'},
+  probability:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+probability+Nepal',pdf:'https://ioenotes.edu.np/'},
+  vectors:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+vectors+Nepal',pdf:'https://ioenotes.edu.np/'},
+  logarithms:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+logarithms+Nepal',pdf:'https://ioenotes.edu.np/'},
+  statistics:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+statistics+Nepal',pdf:'https://ioenotes.edu.np/'},
+  permutations:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+permutations+combinations+Nepal',pdf:'https://ioenotes.edu.np/'},
+  conic_sections:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+conic+sections+Nepal',pdf:'https://ioenotes.edu.np/'},
+  mechanics:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+mechanics+Nepal',pdf:'https://ioenotes.edu.np/'},
+  optics:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+optics+Nepal',pdf:'https://ioenotes.edu.np/'},
+  electricity:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+electricity+Nepal',pdf:'https://ioenotes.edu.np/'},
+  waves:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+waves+Nepal',pdf:'https://ioenotes.edu.np/'},
+  thermodynamics:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+thermodynamics+Nepal',pdf:'https://ioenotes.edu.np/'},
+  modern_physics:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+modern+physics+Nepal',pdf:'https://ioenotes.edu.np/'},
+  gravitation:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+gravitation+Nepal',pdf:'https://ioenotes.edu.np/'},
+  oscillations:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+simple+harmonic+motion+Nepal',pdf:'https://ioenotes.edu.np/'},
+  magnetism:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+magnetism+Nepal',pdf:'https://ioenotes.edu.np/'},
+  work_energy:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+work+energy+power+Nepal',pdf:'https://ioenotes.edu.np/'},
+  atomic_structure:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+atomic+structure+Nepal',pdf:'https://ioenotes.edu.np/'},
+  periodic_table:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+periodic+table+Nepal',pdf:'https://ioenotes.edu.np/'},
+  chemical_bonding:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+chemical+bonding+Nepal',pdf:'https://ioenotes.edu.np/'},
+  organic_chemistry:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+organic+chemistry+Nepal',pdf:'https://ioenotes.edu.np/'},
+  electrochemistry:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+electrochemistry+Nepal',pdf:'https://ioenotes.edu.np/'},
+  reaction_kinetics:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+reaction+kinetics+Nepal',pdf:'https://ioenotes.edu.np/'},
+  equilibrium:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+chemical+equilibrium+Nepal',pdf:'https://ioenotes.edu.np/'},
+  thermochemistry:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+thermochemistry+Nepal',pdf:'https://ioenotes.edu.np/'},
+  acids_bases:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+acids+bases+Nepal',pdf:'https://ioenotes.edu.np/'},
+  mole_concept:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+mole+concept+Nepal',pdf:'https://ioenotes.edu.np/'},
+  solutions:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+solutions+concentration+Nepal',pdf:'https://ioenotes.edu.np/'},
+  oxidation_reduction:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+oxidation+reduction+redox+Nepal',pdf:'https://ioenotes.edu.np/'},
+  inorganic_chemistry:{yt:'https://www.youtube.com/results?search_query=IOE+entrance+inorganic+chemistry+Nepal',pdf:'https://ioenotes.edu.np/'},
+};
+
+const SUBJ_LABEL = {math:'Mathematics',physics:'Physics',chemistry:'Chemistry'};
+const SUBJ_BADGE = {math:'badge-math',physics:'badge-physics',chemistry:'badge-chemistry'};
+const TOPIC_LABEL = t => t.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+function subjectOf(id){return id.startsWith('m')?'math':id.startsWith('p')?'physics':'chemistry'}
+
+function selectQuestions(){
+  const tricks=shuffle([...BANK.math,...BANK.physics,...BANK.chemistry].filter(q=>q.d==='trick'));
+  const hards=shuffle([...BANK.math,...BANK.physics,...BANK.chemistry].filter(q=>q.d==='hard'));
+  const trickQ={...tricks[0],exception:'trick'};
+  const hardPool=hards.filter(q=>q.id!==trickQ.id);
+  const hardQ={...shuffle(hardPool)[0],exception:'hard'};
+  const usedIds=new Set([trickQ.id,hardQ.id]);
+  let mCount=4,pCount=3,cCount=3;
+  if(subjectOf(trickQ.id)==='math')mCount--;else if(subjectOf(trickQ.id)==='physics')pCount--;else cCount--;
+  if(subjectOf(hardQ.id)==='math')mCount--;else if(subjectOf(hardQ.id)==='physics')pCount--;else cCount--;
+  const norm=q=>q.d==='normal'&&!usedIds.has(q.id);
+  const mNorm=shuffle(BANK.math.filter(norm)).slice(0,mCount);
+  const pNorm=shuffle(BANK.physics.filter(norm)).slice(0,pCount);
+  const cNorm=shuffle(BANK.chemistry.filter(norm)).slice(0,cCount);
+  return shuffle([...mNorm,...pNorm,...cNorm,trickQ,hardQ]);
+}
+
+let state={
+  screen:'home',
+  questions:[],
+  currentQ:0,
+  selected:null,
+  showAnswer:false,
+  answers:[],
+  qStart:0,
+  timeLeft:45,
+  results:null,
+  attempts:[],
+  timerID:null,
+  autoID:null,
+};
+
+async function loadAttempts(){
+  try{const r=await window.storage.get('ioe_attempts');if(r)state.attempts=JSON.parse(r.value);}catch(e){}
+  render();
+}
+
+function startQuiz(){
+  clearInterval(state.timerID);clearTimeout(state.autoID);
+  state.questions=selectQuestions();
+  state.currentQ=0;state.selected=null;state.showAnswer=false;state.answers=[];
+  state.timeLeft=45;state.qStart=Date.now();state.screen='quiz';
+  render();startTimer();
+}
+
+function startTimer(){
+  clearInterval(state.timerID);
+  state.timerID=setInterval(()=>{
+    state.timeLeft--;
+    if(state.timeLeft<=0){clearInterval(state.timerID);handleTimeout();}
+    else updateTimer();
+  },1000);
+}
+
+function updateTimer(){
+  const el=document.getElementById('timer-num');
+  const arc=document.getElementById('timer-arc');
+  if(!el||!arc)return;
+  el.textContent=state.timeLeft;
+  const r=20,circ=2*Math.PI*r,pct=state.timeLeft/45;
+  arc.setAttribute('stroke-dasharray',`${(pct*circ).toFixed(1)} ${circ.toFixed(1)}`);
+  const col=state.timeLeft<10?'#E24B4A':state.timeLeft<20?'#BA7517':'#3B6D11';
+  arc.setAttribute('stroke',col);el.style.color=col;
+}
+
+function handleTimeout(){
+  recordAnswer(-1);
+}
+
+function handleSelect(idx){
+  if(state.showAnswer||state.selected!==null)return;
+  clearInterval(state.timerID);
+  state.selected=idx;state.showAnswer=true;
+  const timeTaken=Math.round((Date.now()-state.qStart)/1000);
+  recordAnswer(idx,timeTaken);
+}
+
+function recordAnswer(idx,timeTaken){
+  timeTaken=timeTaken??Math.max(1,45-state.timeLeft);
+  const q=state.questions[state.currentQ];
+  const subj=subjectOf(q.id);
+  const correct=idx===q.ans;
+  state.answers.push({id:q.id,subj,topic:q.topic,selected:idx,correct,timeTaken,exception:q.exception||null});
+  state.selected=idx;state.showAnswer=true;
+  renderQuizCard();
+  state.autoID=setTimeout(()=>{
+    if(state.currentQ+1<state.questions.length){
+      state.currentQ++;state.selected=null;state.showAnswer=false;state.timeLeft=45;state.qStart=Date.now();
+      render();startTimer();
+    }else{finishQuiz();}
+  },1600);
+}
+
+async function finishQuiz(){
+  const ans=state.answers;
+  const correct=ans.filter(a=>a.correct).length;
+  const score=Math.round((correct/ans.length)*100);
+  const subjs=['math','physics','chemistry'];
+  const subjStats={};
+  for(const s of subjs){
+    const sa=ans.filter(a=>a.subj===s);
+    subjStats[s]={total:sa.length,correct:sa.filter(a=>a.correct).length,
+      avgTime:sa.length?Math.round(sa.reduce((x,a)=>x+a.timeTaken,0)/sa.length):0,
+      wrongTopics:[...new Set(sa.filter(a=>!a.correct).map(a=>a.topic))]};
+  }
+  const weakTopics=[...new Set(ans.filter(a=>!a.correct).map(a=>a.topic))];
+  const exAns=ans.filter(a=>a.exception);
+  const attempt={date:new Date().toISOString(),score,correct,total:ans.length,subjStats,weakTopics,exAns};
+  state.results=attempt;
+  state.attempts=[...state.attempts,attempt];
+  try{await window.storage.set('ioe_attempts',JSON.stringify(state.attempts));}catch(e){}
+  state.screen='results';render();
+}
+
+function renderQuizCard(){
+  const q=state.questions[state.currentQ];
+  const labels=['A','B','C','D'];
+  document.querySelectorAll('.opt-btn').forEach((btn,i)=>{
+    btn.disabled=true;
+    if(state.showAnswer){
+      if(i===q.ans)btn.className='opt-btn correct';
+      else if(i===state.selected&&state.selected!==q.ans)btn.className='opt-btn wrong';
+      else btn.className='opt-btn reveal';
+    }
+  });
+}
+
+function render(){
+  const app=document.getElementById('app');
+  if(state.screen==='home')app.innerHTML=renderHome();
+  else if(state.screen==='quiz')app.innerHTML=renderQuiz();
+  else if(state.screen==='results')app.innerHTML=renderResults();
+  else if(state.screen==='history')app.innerHTML=renderHistory();
+  attachEvents();
+}
+
+function renderHome(){
+  const count=state.attempts.length;
+  const best=count?Math.max(...state.attempts.map(a=>a.score)):null;
+  const recent=count?state.attempts[count-1]:null;
+  return`<div class="screen animate">
+    <div style="margin-bottom:1.5rem">
+      <div style="font-size:11px;color:var(--color-text-secondary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px">IOE Entrance Preparation</div>
+      <h1 style="font-size:26px;font-weight:500;margin-bottom:6px">Engineering Entrance Quiz</h1>
+      <p style="font-size:14px;color:var(--color-text-secondary)">10 questions — Mathematics, Physics &amp; Chemistry — with trick &amp; hard exceptions</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.5rem">
+      <div class="stat-card"><div class="stat-num">${count}</div><div class="stat-label">Attempts</div></div>
+      <div class="stat-card"><div class="stat-num">${best!==null?best+'%':'—'}</div><div class="stat-label">Best score</div></div>
+      <div class="stat-card"><div class="stat-num">${recent?recent.score+'%':'—'}</div><div class="stat-label">Last score</div></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:1.5rem">
+      <button class="btn btn-primary" id="btn-start" style="flex:1;padding:13px">Start quiz ↗</button>
+      ${count>0?`<button class="btn" id="btn-history">History</button>`:''}
+    </div>
+    <div class="card" style="font-size:13px;color:var(--color-text-secondary)">
+      <div style="font-weight:500;color:var(--color-text-primary);margin-bottom:8px;font-size:14px">How it works</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div>4 Math · 3 Physics · 3 Chemistry, randomized every quiz</div>
+        <div>1 <span class="badge badge-trick">⚡ Trick</span> question — don't fall for common misconceptions</div>
+        <div>1 <span class="badge badge-hard">🔥 Hard</span> question — tests deeper understanding</div>
+        <div>45 seconds per question — time is tracked for analysis</div>
+        <div>Weak topics get YouTube + PDF resource links</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderQuiz(){
+  const q=state.questions[state.currentQ];
+  const subj=subjectOf(q.id);
+  const labels=['A','B','C','D'];
+  const r=20,circ=2*Math.PI*r,pct=state.timeLeft/45;
+  const timerCol=state.timeLeft<10?'#E24B4A':state.timeLeft<20?'#BA7517':'#3B6D11';
+  return`<div class="screen animate">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="badge ${SUBJ_BADGE[subj]}">${SUBJ_LABEL[subj]}</span>
+        ${q.exception==='trick'?`<span class="badge badge-trick">⚡ Trick</span>`:''}
+        ${q.exception==='hard'?`<span class="badge badge-hard">🔥 Hard</span>`:''}
+      </div>
+      <div style="font-size:13px;color:var(--color-text-secondary)">${state.currentQ+1} / ${state.questions.length}</div>
+    </div>
+    <div class="prog-bar" style="margin-bottom:18px"><div class="prog-fill" style="width:${((state.currentQ)/state.questions.length*100).toFixed(0)}%"></div></div>
+    <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:20px">
+      <div style="flex:1">
+        <p style="font-size:16px;line-height:1.6;font-weight:500">${q.q}</p>
+        <div style="font-size:12px;color:var(--color-text-secondary);margin-top:4px">${TOPIC_LABEL(q.topic)}</div>
+      </div>
+      <div class="timer-ring">
+        <svg width="52" height="52" viewBox="0 0 52 52">
+          <circle cx="26" cy="26" r="${r}" fill="none" stroke="var(--color-background-secondary)" stroke-width="5"/>
+          <circle cx="26" cy="26" r="${r}" fill="none" stroke="${timerCol}" stroke-width="5"
+            stroke-dasharray="${(pct*circ).toFixed(1)} ${circ.toFixed(1)}"
+            stroke-linecap="round" id="timer-arc"/>
+        </svg>
+        <div class="timer-num" id="timer-num" style="color:${timerCol}">${state.timeLeft}</div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px" id="opts">
+      ${q.opts.map((opt,i)=>`
+        <button class="opt-btn" data-idx="${i}">
+          <span class="opt-label">${labels[i]}</span>
+          <span>${opt}</span>
+        </button>`).join('')}
+    </div>
+  </div>`;
+}
+
+function renderResults(){
+  const r=state.results;
+  const subjs=['math','physics','chemistry'];
+  const weakHtml=r.weakTopics.length===0?'<div style="color:var(--color-text-secondary);font-size:14px">All correct! Outstanding work.</div>':
+    r.weakTopics.map(t=>{
+      const res=RESOURCES[t]||{yt:'https://www.youtube.com/results?search_query=IOE+entrance+'+t,pdf:'https://ioenotes.edu.np/'};
+      return`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid var(--color-border-tertiary)">
+        <span style="font-size:14px">${TOPIC_LABEL(t)}</span>
+        <div style="display:flex;gap:6px">
+          <a href="${res.yt}" class="resource-link" target="_blank">▶ YouTube</a>
+          <a href="${res.pdf}" class="resource-link" target="_blank">📄 Notes</a>
+        </div>
+      </div>`;
+    }).join('');
+
+  const exHtml=r.exAns.length?r.exAns.map(a=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary)">
+      <span class="badge ${a.exception==='trick'?'badge-trick':'badge-hard'}">${a.exception==='trick'?'⚡ Trick':'🔥 Hard'}</span>
+      <span style="flex:1;font-size:13px;color:var(--color-text-secondary)">${TOPIC_LABEL(a.topic)}</span>
+      <span class="badge ${a.correct?'badge-correct':'badge-wrong'}">${a.correct?'Correct':'Wrong'}</span>
+    </div>`).join(''):'';
+
+  const trend=state.attempts.length>1?`<div style="font-size:13px;color:var(--color-text-secondary);margin-top:8px;text-align:center">
+    ${state.attempts.length>=2?`Previous: ${state.attempts[state.attempts.length-2].score}% → Now: ${r.score}% ${r.score>state.attempts[state.attempts.length-2].score?'↑':'↓'}`:''}
+  </div>`:'';
+
+  return`<div class="screen animate">
+    <div style="text-align:center;margin-bottom:1.5rem">
+      <div style="font-size:42px;font-weight:500;margin-bottom:4px">${r.score}<span style="font-size:22px;color:var(--color-text-secondary)">%</span></div>
+      <div style="font-size:15px;color:var(--color-text-secondary)">${r.correct} of ${r.total} correct</div>
+      ${trend}
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1.25rem">
+      ${subjs.map(s=>{const ss=r.subjStats[s];return`<div class="stat-card">
+        <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:4px">${SUBJ_LABEL[s].slice(0,4)}</div>
+        <div style="font-size:18px;font-weight:500">${ss.correct}/${ss.total}</div>
+        <div style="font-size:11px;color:var(--color-text-secondary)">avg ${ss.avgTime}s</div>
+      </div>`;}).join('')}
+    </div>
+
+    <div class="card" style="margin-bottom:1rem">
+      <div style="font-weight:500;font-size:14px;margin-bottom:12px">Subject performance</div>
+      ${subjs.map(s=>{const ss=r.subjStats[s];const pct=Math.round((ss.correct/ss.total)*100);return`
+        <div class="subj-bar-wrap">
+          <div style="display:flex;justify-content:space-between;font-size:13px">
+            <span class="badge ${SUBJ_BADGE[s]}">${SUBJ_LABEL[s]}</span>
+            <span style="color:var(--color-text-secondary)">${pct}% · avg ${ss.avgTime}s/q</span>
+          </div>
+          <div class="subj-bar-bg"><div style="height:100%;width:${pct}%;background:${s==='math'?'#185FA5':s==='physics'?'#534AB7':'#3B6D11'};border-radius:4px;transition:width 0.6s ease"></div></div>
+        </div>`}).join('')}
+    </div>
+
+    ${r.exAns.length?`<div class="card" style="margin-bottom:1rem">
+      <div style="font-weight:500;font-size:14px;margin-bottom:10px">Exception questions</div>
+      ${exHtml}
+    </div>`:''}
+
+    ${r.weakTopics.length?`<div class="card" style="margin-bottom:1rem">
+      <div style="font-weight:500;font-size:14px;margin-bottom:10px">Study resources for weak topics</div>
+      ${weakHtml}
+    </div>`:''}
+
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-primary" id="btn-start" style="flex:1;padding:12px">Try again ↗</button>
+      <button class="btn" id="btn-history">History</button>
+    </div>
+  </div>`;
+}
+
+function renderHistory(){
+  const att=[...state.attempts].reverse();
+  const scoreColor=s=>s>=80?'#3B6D11':s>=60?'#BA7517':'#A32D2D';
+  return`<div class="screen animate">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.25rem">
+      <button class="btn" id="btn-home" style="padding:7px 14px;font-size:13px">← Back</button>
+      <h2 style="font-size:18px;font-weight:500">Attempt history</h2>
+    </div>
+    ${att.length===0?`<div class="card" style="text-align:center;color:var(--color-text-secondary);font-size:14px;padding:2rem">No attempts yet. Start your first quiz!</div>`
+    :att.map((a,i)=>{
+      const d=new Date(a.date);
+      const ds=d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+      return`<div class="card" style="margin-bottom:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:13px;color:var(--color-text-secondary)">${ds}</span>
+          <span style="font-size:20px;font-weight:500;color:${scoreColor(a.score)}">${a.score}%</span>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          ${['math','physics','chemistry'].map(s=>{
+            const ss=a.subjStats[s];
+            return`<span class="badge ${SUBJ_BADGE[s]}">${SUBJ_LABEL[s].slice(0,4)} ${ss.correct}/${ss.total}</span>`;
+          }).join('')}
+          ${a.weakTopics.slice(0,2).map(t=>`<span class="badge badge-wrong" style="font-size:11px">${TOPIC_LABEL(t).split(' ')[0]}</span>`).join('')}
+        </div>
+      </div>`;
+    }).join('')}
+    <button class="btn btn-primary" id="btn-start" style="width:100%;padding:12px;margin-top:10px">Start new quiz ↗</button>
+  </div>`;
+}
+
+function attachEvents(){
+  const on=(id,fn)=>{const el=document.getElementById(id);if(el)el.addEventListener('click',fn)};
+  on('btn-start',startQuiz);
+  on('btn-history',()=>{state.screen='history';render();});
+  on('btn-home',()=>{state.screen='home';render();});
+  document.querySelectorAll('.opt-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>handleSelect(parseInt(btn.dataset.idx)));
+  });
+}
+
+loadAttempts();
+</script>
